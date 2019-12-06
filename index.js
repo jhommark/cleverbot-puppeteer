@@ -1,10 +1,12 @@
 const express = require('express');
+const compression = require('compression');
 const puppeteer = require('puppeteer');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use(compression());
 
 app.get('/', async (req, res) => {
   if (!req.query.message) res.json({
