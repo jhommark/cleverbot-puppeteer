@@ -1,0 +1,39 @@
+const express = require('express');
+const puppeteer = require('puppeteer');
+
+const app = express();
+const port = 3000;
+
+app.use(express.json());
+
+app.get('/', async (req, res) => {
+  if (!req.query.message) res.json({
+    status: 'failed',
+    data: 'No message sent'
+  });
+
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+
+  page.setDefaultNavigationTimeout(0);
+  page.goto('https://www.cleverbot.com/');
+
+  await page.waitForSelector('#avatarform', { timeout: 0 });
+  await page.type('input[name="stimulus"]', req.query.message.toString());
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('#snipTextIcon', { timeout: 0 });
+
+  const response = await page.evaluate(() => {
+    window.stop();
+    return {
+      status: 'success',
+      data: document.querySelector('#line1 .bot').innerHTML,
+    }
+  });
+
+  res.json(response);
+
+  await browser.close();
+});
+
+app.listen(port, () => console.log(`Example app listening on port ${port}!`));
